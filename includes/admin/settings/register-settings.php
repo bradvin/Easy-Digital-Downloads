@@ -35,7 +35,7 @@ function edd_register_settings() {
 
 	/* white list our settings, each in their respective section
 	   filters can be used to add more options to each section */
-	$edd_settings = array(
+	$edd_settings = apply_filters('edd_settings_all', array(
 		'general' => apply_filters('edd_settings_general',
 			array(
 				'test_mode' => array(
@@ -396,194 +396,75 @@ function edd_register_settings() {
 				)
 			)
 		)
-	);
+	));
 
-	if( false == get_option( 'edd_settings_general' ) ) {
-		add_option( 'edd_settings_general' );
-	}
-	if( false == get_option( 'edd_settings_gateways' ) ) {
-		add_option( 'edd_settings_gateways' );
-	}
-	if( false == get_option( 'edd_settings_emails' ) ) {
-		add_option( 'edd_settings_emails' );
-	}
-	if( false == get_option( 'edd_settings_styles' ) ) {
-		add_option( 'edd_settings_styles' );
-	}
-	if( false == get_option( 'edd_settings_taxes' ) ) {
-        add_option( 'edd_settings_taxes' );
-   	}
-	if( false == get_option( 'edd_settings_misc' ) ) {
-		add_option( 'edd_settings_misc' );
-	}
+  //loop through all settings sections and configure them for use
+  foreach ( $edd_settings as $setting=>$setting_data ) {
+  
+    //save the option if it does not exist
+    if( false == get_option( 'edd_settings_' . $setting ) ) {
+      add_option( 'edd_settings_' . $setting );
+    }
+    
+    add_settings_section(
+      'edd_settings_' . $setting,
+      apply_filters('edd_settings_title', $setting),
+      '__return_false',
+      'edd_settings_' . $setting
+    );
 
+    foreach( $setting_data as $option ) {
+      add_settings_field(
+        "edd_settings_{$setting}[{$option['id']}]",
+        $option['name'],
+        function_exists( 'edd_' . $option['type'] . '_callback' ) ? 'edd_' . $option['type'] . '_callback' : 'edd_missing_callback',
+        "edd_settings_{$setting}",
+        "edd_settings_{$setting}",
+        array(
+          'id' => $option['id'],
+          'desc' => $option['desc'],
+          'name' => $option['name'],
+          'section' => $setting,
+          'size' => isset($option['size']) ? $option['size'] : null,
+          'options' => isset($option['options']) ? $option['options'] : '',
+          'std' => isset($option['std']) ? $option['std'] : ''
+        )
+      );
+    }    
+    
+    register_setting( "edd_settings_{$setting}", "edd_settings_{$setting}", 'edd_settings_sanitize' );
+  }  
 
-	add_settings_section(
-		'edd_settings_general',
-		__('General Settings', 'edd'),
-		'__return_false',
-		'edd_settings_general'
-	);
-
-	foreach( $edd_settings['general'] as $option ) {
-		add_settings_field(
-			'edd_settings_general[' . $option['id'] . ']',
-			$option['name'],
-			function_exists( 'edd_' . $option['type'] . '_callback' ) ? 'edd_' . $option['type'] . '_callback' : 'edd_missing_callback',
-			'edd_settings_general',
-			'edd_settings_general',
-			array(
-				'id' => $option['id'],
-				'desc' => $option['desc'],
-				'name' => $option['name'],
-				'section' => 'general',
-				'size' => isset($option['size']) ? $option['size'] : null,
-				'options' => isset($option['options']) ? $option['options'] : '',
-				'std' => isset($option['std']) ? $option['std'] : ''
-			)
-		);
-	}
-
-	add_settings_section(
-		'edd_settings_gateways',
-		__('Payment Gateway Settings', 'edd'),
-		'__return_false',
-		'edd_settings_gateways'
-	);
-
-	foreach( $edd_settings['gateways'] as $option ) {
-		add_settings_field(
-			'edd_settings_gateways[' . $option['id'] . ']',
-			$option['name'],
-			function_exists( 'edd_' . $option['type'] . '_callback' ) ? 'edd_' . $option['type'] . '_callback' : 'edd_missing_callback',
-			'edd_settings_gateways',
-			'edd_settings_gateways',
-			array(
-				'id' => $option['id'],
-				'desc' => $option['desc'],
-				'name' => $option['name'],
-				'section' => 'gateways',
-				'size' => isset($option['size']) ? $option['size'] : null,
-				'options' => isset($option['options']) ? $option['options'] : '',
-				'std' => isset($option['std']) ? $option['std'] : ''
-			)
-		);
-	}
-
-	add_settings_section(
-		'edd_settings_emails',
-		__('Email Settings', 'edd'),
-		'__return_false',
-		'edd_settings_emails'
-	);
-
-	foreach( $edd_settings['emails'] as $option ) {
-		add_settings_field(
-			'edd_settings_emails[' . $option['id'] . ']',
-			$option['name'],
-			function_exists( 'edd_' . $option['type'] . '_callback' ) ? 'edd_' . $option['type'] . '_callback' : 'edd_missing_callback',
-			'edd_settings_emails',
-			'edd_settings_emails',
-			array(
-				'id' => $option['id'],
-				'desc' => $option['desc'],
-				'name' => $option['name'],
-				'section' => 'emails',
-				'size' => isset($option['size']) ? $option['size'] : null,
-				'options' => isset($option['options']) ? $option['options'] : '',
-				'std' => isset($option['std']) ? $option['std'] : ''
-			)
-		);
-	}
-
-	add_settings_section(
-		'edd_settings_styles',
-		__('Style Settings', 'edd'),
-		'__return_false',
-		'edd_settings_styles'
-	);
-
-	foreach( $edd_settings['styles'] as $option ) {
-		add_settings_field(
-			'edd_settings_styles[' . $option['id'] . ']',
-			$option['name'],
-			function_exists( 'edd_' . $option['type'] . '_callback' ) ? 'edd_' . $option['type'] . '_callback' : 'edd_missing_callback',
-			'edd_settings_styles',
-			'edd_settings_styles',
-			array(
-				'id' => $option['id'],
-				'desc' => $option['desc'],
-				'name' => $option['name'],
-				'section' => 'styles',
-				'size' => isset($option['size']) ? $option['size'] : '' ,
-				'options' => isset($option['options']) ? $option['options'] : '',
-				'std' => isset($option['std']) ? $option['std'] : ''
-			)
-		);
-	}
-
-	add_settings_section(
-		'edd_settings_taxes',
-		__('Tax Settings', 'edd'),
-		'edd_settings_taxes_description_callback',
-		'edd_settings_taxes'
-	);
-
-	foreach($edd_settings['taxes'] as $option) {
-		add_settings_field(
-			'edd_settings_taxes[' . $option['id'] . ']',
-			$option['name'],
-			'edd_' . $option['type'] . '_callback',
-			'edd_settings_taxes',
-			'edd_settings_taxes',
-			array(
-				'id' => $option['id'],
-				'desc' => $option['desc'],
-				'name' => $option['name'],
-				'section' => 'taxes',
-				'size' => isset($option['size']) ? $option['size'] : '' ,
-				'options' => isset($option['options']) ? $option['options'] : '',
-				'std' => isset($option['std']) ? $option['std'] : ''
-	    	)
-		);
-	}
-
-	add_settings_section(
-		'edd_settings_misc',
-		__('Misc Settings', 'edd'),
-		'__return_false',
-		'edd_settings_misc'
-	);
-
-	foreach($edd_settings['misc'] as $option) {
-		add_settings_field(
-			'edd_settings_misc[' . $option['id'] . ']',
-			$option['name'],
-			function_exists( 'edd_' . $option['type'] . '_callback' ) ? 'edd_' . $option['type'] . '_callback' : 'edd_missing_callback',
-			'edd_settings_misc',
-			'edd_settings_misc',
-			array(
-				'id' => $option['id'],
-				'desc' => $option['desc'],
-				'name' => $option['name'],
-				'section' => 'misc',
-				'size' => isset( $option['size'] ) ? $option['size'] : '' ,
-				'options' => isset( $option['options'] ) ? $option['options'] : '',
-				'std' => isset( $option['std'] ) ? $option['std'] : ''
-			)
-		);
-	}
-
-	// Creates our settings in the options table
-	register_setting( 'edd_settings_general', 'edd_settings_general', 'edd_settings_sanitize' );
-	register_setting( 'edd_settings_gateways', 'edd_settings_gateways', 'edd_settings_sanitize' );
-	register_setting( 'edd_settings_emails', 'edd_settings_emails', 'edd_settings_sanitize' );
-	register_setting( 'edd_settings_styles', 'edd_settings_styles', 'edd_settings_sanitize' );
-	register_setting( 'edd_settings_taxes', 'edd_settings_taxes', 'edd_settings_sanitize' );
-	register_setting( 'edd_settings_misc', 'edd_settings_misc', 'edd_settings_sanitize' );
 }
 add_action('admin_init', 'edd_register_settings');
 
+/**
+ * Render Settings Title 
+ *
+ * Renders the settings section Title
+ *
+ * @access      private
+ * @since       1.3.3
+ * @return      string
+*/
+function edd_settings_title_render($setting) {
+  if ( $setting == 'general' ) {
+    return __('General Settings', 'edd');
+  } elseif ( $setting == 'gateways' ) {
+    return __('Payment Gateway Settings', 'edd');
+  } elseif ( $setting == 'emails' ) {
+    return __('Email Settings', 'edd');
+  } elseif ( $setting == 'styles' ) {
+    return __('Style Settings', 'edd');
+  } elseif ( $setting == 'taxes' ) {
+    return __('Tax Settings', 'edd');
+  } elseif ( $setting == 'misc' ) {
+    return __('Misc Settings', 'edd');
+  } else {
+    return __('Settings', 'edd');
+  }
+}
+add_filter('edd_settings_title', 'edd_settings_title_render');
 
 
 /**
@@ -930,12 +811,15 @@ function edd_settings_sanitize( $input ) {
 */
 
 function edd_get_settings() {
-	$general_settings 	= is_array(get_option('edd_settings_general')) 	? get_option('edd_settings_general') 	: array();
-	$gateway_settings 	= is_array(get_option('edd_settings_gateways')) ? get_option('edd_settings_gateways') 	: array();
-	$email_settings 	= is_array(get_option('edd_settings_emails')) 	? get_option('edd_settings_emails') 	: array();
-	$style_settings 	= is_array(get_option('edd_settings_styles')) 	? get_option('edd_settings_styles') 	: array();
-	$tax_settings 		= is_array(get_option('edd_settings_taxes')) 	? get_option('edd_settings_taxes') 		: array();
-	$misc_settings 		= is_array(get_option('edd_settings_misc')) 	? get_option('edd_settings_misc') 		: array();
 
-	return array_merge($general_settings, $gateway_settings, $email_settings, $style_settings, $tax_settings, $misc_settings);
+  $sections = apply_filters('edd_settings_sections', array('general', 'gateways', 'emails', 'styles', 'taxes', 'misc'));
+  
+  $settings = array();
+  
+  foreach($sections as $section) {
+    $section_settings = get_option('edd_settings_' . $section);
+    if (is_array($section_settings)) { $settings = array_merge($settings, $section_settings); }
+  }
+
+  return $settings;
 }

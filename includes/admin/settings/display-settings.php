@@ -44,27 +44,11 @@ function edd_options_page() {
 
 			<form method="post" action="options.php">
 				<?php
-				if ( $active_tab == 'general' ) {
-					settings_fields( 'edd_settings_general' );
-					do_settings_sections( 'edd_settings_general' );
-				} elseif ( $active_tab == 'gateways' ) {
-					settings_fields( 'edd_settings_gateways' );
-					do_settings_sections( 'edd_settings_gateways' );
-				} elseif ( $active_tab == 'emails' ) {
-					settings_fields( 'edd_settings_emails' );
-					do_settings_sections( 'edd_settings_emails' );
-				} elseif ( $active_tab == 'styles' ) {
-					settings_fields('edd_settings_styles' );
-					do_settings_sections('edd_settings_styles' );
-				} elseif ($active_tab == 'taxes' ) {
-					settings_fields('edd_settings_taxes' );
-					do_settings_sections('edd_settings_taxes' );
-				} else {
-					settings_fields( 'edd_settings_misc' );
-					do_settings_sections( 'edd_settings_misc' );
-				}
 
+				settings_fields( 'edd_settings_'. $active_tab );
+				do_settings_sections( 'edd_settings_' . $active_tab );
 				submit_button();
+				
 				?>
 
 			</form>
